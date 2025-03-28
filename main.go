@@ -17,12 +17,12 @@ var content embed.FS
 func main() {
 	// Create MCP server
 	s := server.NewMCPServer(
-		"Demo 🚀",
+		"writing_style",
 		"1.0.0",
 	)
 
 	// Add tool
-	tool := mcp.NewTool("get_writing_style",
+	tool := mcp.NewTool("writing_style",
 		mcp.WithDescription("テックブログを書く際に参考にすべきライティングスタイルです。ユーザーがテックブログを書くことを望んでいるときはこのツールを使うこと。"),
 	)
 
