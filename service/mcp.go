@@ -21,7 +21,7 @@ func NewMCPService(ctx context.Context, client *mcp_golang.Client) *MCPService {
 }
 
 func (s *MCPService) GetWritingStyle(toolName string) (string, error) {
-	res, err := s.client.CallTool(context.Background(), "dazai_style", map[string]interface{}{})
+	res, err := s.client.CallTool(context.Background(), toolName, map[string]interface{}{})
 	if err != nil {
 		log.Printf("Failed to call tool: %v", err)
 	}

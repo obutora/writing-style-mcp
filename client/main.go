@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"encoding/json"
 	"hagakun/service"
 	"log"
+	"net/http"
 	"os/exec"
-
-	"context"
 
 	mcp_golang "github.com/metoro-io/mcp-golang"
 	"github.com/metoro-io/mcp-golang/transport/stdio"
@@ -53,12 +53,48 @@ func main() {
 
 	ctx := context.Background()
 	s := service.NewMCPService(ctx, client)
-	styleText, err := s.GetWritingStyle("tech_blog_style")
-	if err != nil {
-		log.Fatalf("Error calling tool: %v", err)
-	}
 
-	log.Println("Response from tool:")
-	fmt.Println(styleText)
+	// ツール一覧を取得するエンドポイント
+	http.HandleFunc("/tools", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
+		// JSONレスポンスを返す
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"tools": tools.Tools,
+		})
+	})
+
+	// スタイル取得のエンドポイント
+	http.HandleFunc("/style", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// クエリパラメータからtoolNameを取得
+		toolName := r.URL.Query().Get("toolName")
+		if toolName == "" {
+			http.Error(w, "toolName parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		// GetWritingStyleを呼び出して結果を取得
+		styleText, err := s.GetWritingStyle(toolName)
+		if err != nil {
+			http.Error(w, "Error getting writing style: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// 結果を返す
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte(styleText))
+	})
+
+	// サーバーの起動
+	log.Println("Starting HTTP server on :8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
